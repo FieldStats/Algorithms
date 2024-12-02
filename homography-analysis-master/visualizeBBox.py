@@ -5,7 +5,7 @@ import os
 
 # File paths
 JSON_FILE = "modified_tracking_data.json"
-VIDEO_FILE = "new_test2.mp4"
+VIDEO_FILE = "video_left.mp4"
 HOMOGRAPHY_MATRIX_FILE = "homography_matrix.txt"
 OUTPUT_VIDEO_FILE = "transformed_output_video_with_dots_and_ids.mp4"
 

@@ -33,7 +33,7 @@ def draw_grid(transformed_image, homography_matrix, original_image):
 
 def main():
     # Load the homography matrix from the saved .txt file
-    homography_matrix_file = "homography_matrix.txt"
+    homography_matrix_file = "al1_homography_matrix.txt"
     try:
         homography_matrix = np.loadtxt(homography_matrix_file, delimiter=' ')
         print(f"Homography matrix loaded from {homography_matrix_file}.")
@@ -42,7 +42,7 @@ def main():
         return
 
     # Load the image
-    input_image = cv2.imread("al2.png")
+    input_image = cv2.imread("al1.png")
     if input_image is None:
         print("Error: Image not found.")
         return

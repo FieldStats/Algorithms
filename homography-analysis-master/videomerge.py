@@ -1,91 +1,70 @@
-import cv2
 import json
 import os
+from collections import defaultdict
 
-# File paths
-JSON_FILE = "modified_tracking_data.json"
-VIDEO_FILE = "new_test2.mp4"
-OUTPUT_VIDEO_FILE = "output_video.mp4"
+def calculate_iou(box1, box2):
+    # Compute IoU between two bounding boxes
+    x1 = max(box1[0], box2[0])
+    y1 = max(box1[1], box2[1])
+    x2 = min(box1[2], box2[2])
+    y2 = min(box1[3], box2[3])
 
-def draw_objects_on_frame(frame, objects):
-    """
-    Draw bounding boxes, centers, and other details on the video frame.
-    """
-    for obj in objects:
-        track_id = obj.get("track_id")
-        class_id = obj.get("class_id")
-        confidence = obj.get("confidence")
-        bbox = obj.get("bbox")
-        center = obj.get("center")
+    inter_area = max(0, x2 - x1) * max(0, y2 - y1)
+    box1_area = (box1[2] - box1[0]) * (box1[3] - box1[1])
+    box2_area = (box2[2] - box2[0]) * (box2[3] - box2[1])
+    union_area = box1_area + box2_area - inter_area
+    return inter_area / union_area if union_area > 0 else 0
 
-        # Convert bounding box and center coordinates to integers
-        bbox = [int(coord) for coord in bbox]
-        center = [int(coord) for coord in center]
+def merge_frame_detections(frame1, frame2, iou_threshold=0.5):
+    merged_objects = []
+    used_indices = set()
 
-        # Draw bounding box
-        cv2.rectangle(frame, (bbox[0], bbox[1]), (bbox[2], bbox[3]), (0, 255, 0), 2)
+    for obj1 in frame1.get("objects", []):
+        merged = False
+        for idx, obj2 in enumerate(frame2.get("objects", [])):
+            if idx in used_indices:
+                continue
+            iou = calculate_iou(obj1["bbox"], obj2["bbox"])
+            if iou > iou_threshold:
+                # Merge based on higher confidence
+                if obj1["confidence"] > obj2["confidence"]:
+                    merged_objects.append(obj1)
+                else:
+                    merged_objects.append(obj2)
+                used_indices.add(idx)
+                merged = True
+                break
+        if not merged:
+            merged_objects.append(obj1)
 
-        # Draw center point
-        cv2.circle(frame, (center[0], center[1]), 5, (0, 0, 255), -1)
+    # Add remaining objects from frame2
+    for idx, obj2 in enumerate(frame2.get("objects", [])):
+        if idx not in used_indices:
+            merged_objects.append(obj2)
 
-        # Add text for track ID, class ID, and confidence
-        text = f"ID: {track_id}, Class: {class_id}, Conf: {confidence:.2f}"
-        cv2.putText(frame, text, (bbox[0], bbox[1] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
+    return {"frame_index": frame1["frame_index"], "objects": merged_objects}
 
-    return frame
+def merge_camera_data(file1, file2, output_file, iou_threshold=0.5):
+    with open(file1, "r") as f1, open(file2, "r") as f2:
+        data1 = json.load(f1)
+        data2 = json.load(f2)
 
-def main():
-    # Check if files exist
-    if not os.path.exists(JSON_FILE):
-        print(f"Error: JSON file '{JSON_FILE}' not found.")
-        return
-    if not os.path.exists(VIDEO_FILE):
-        print(f"Error: Video file '{VIDEO_FILE}' not found.")
-        return
+    max_frames = max(len(data1), len(data2))
+    merged_data = []
 
-    # Load JSON data
-    with open(JSON_FILE, "r") as f:
-        data = json.load(f)
+    for i in range(max_frames):
+        frame1 = data1[i] if i < len(data1) else {"frame_index": i, "objects": []}
+        frame2 = data2[i] if i < len(data2) else {"frame_index": i, "objects": []}
+        merged_frame = merge_frame_detections(frame1, frame2, iou_threshold)
+        merged_data.append(merged_frame)
 
-    # Open the video file
-    cap = cv2.VideoCapture(VIDEO_FILE)
-    if not cap.isOpened():
-        print(f"Error: Cannot open video file '{VIDEO_FILE}'.")
-        return
-
-    # Get video properties
-    frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-    frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-    fps = int(cap.get(cv2.CAP_PROP_FPS))
-    total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-
-    # Define the codec and create VideoWriter object
-    fourcc = cv2.VideoWriter_fourcc(*"mp4v")
-    out = cv2.VideoWriter(OUTPUT_VIDEO_FILE, fourcc, fps, (frame_width, frame_height))
-
-    frame_index = 0
-    while True:
-        ret, frame = cap.read()
-        if not ret:
-            break
-
-        # Get objects for the current frame
-        frame_data = next((item for item in data if item["frame_index"] == frame_index), None)
-        if frame_data:
-            objects = frame_data.get("objects", [])
-            frame = draw_objects_on_frame(frame, objects)
-
-        # Write the frame to the output video
-        out.write(frame)
-
-        # Show progress
-        print(f"Processing frame {frame_index + 1}/{total_frames}...", end="\r")
-        frame_index += 1
-
-    # Release resources
-    cap.release()
-    out.release()
-    print("\nProcessing complete. Output saved as", OUTPUT_VIDEO_FILE)
+    with open(output_file, "w") as out:
+        json.dump(merged_data, out, indent=2)
 
 if __name__ == "__main__":
-    main()
+    input_dir = "./"
+    file1 = os.path.join(input_dir, "tracking_data1.json")
+    file2 = os.path.join(input_dir, "tracking_data2.json")
+    output_file = os.path.join(input_dir, "merged_tracking_data.json")
+
+    merge_camera_data(file1, file2, output_file, iou_threshold=0.5)
