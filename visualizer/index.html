@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tracking Visualization</title>
+    <style>
+        body {
+            background-color: black;
+            color: white;
+            font-family: Arial, sans-serif;
+        }
+
+        #controls,
+        #saveControls,
+        #removeControls,
+        #playControls,
+        #mergeControls {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            margin: 20px 0;
+        }
+
+        button,
+        select,
+        input[type="range"] {
+            margin: 10px;
+            padding: 10px 20px;
+            background-color: #444;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button:hover,
+        select:hover {
+            background-color: #666;
+        }
+
+        canvas {
+            display: block;
+            margin: 0 auto;
+            background-color: black;
+            border: 1px solid white;
+        }
+
+        #jsonViewerContainer {
+            margin: 20px auto;
+            text-align: center;
+        }
+
+        #jsonViewer {
+            width: 90%;
+            background-color: #222;
+            color: #ddd;
+            border: 1px solid #444;
+            border-radius: 5px;
+            padding: 10px;
+            font-family: monospace;
+        }
+
+        #additionalControls,
+        #saveControls,
+        #removeControls,
+        #playControls,
+        #mergeControls {
+            margin: 20px auto;
+            text-align: center;
+        }
+
+        #additionalControls button,
+        #additionalControls input,
+        #saveControls button,
+        #removeControls button,
+        #playControls button,
+        #mergeControls button {
+            margin: 5px;
+            padding: 10px;
+            background-color: #444;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        #additionalControls button:hover,
+        #saveControls button:hover,
+        #removeControls button:hover,
+        #playControls button:hover,
+        #mergeControls button:hover {
+            background-color: #666;
+        }
+
+        #additionalControls input,
+        #playControls input {
+            width: 60px;
+            text-align: center;
+        }
+
+        #playControls label,
+        #playControls span {
+            margin-left: 10px;
+            font-size: 14px;
+        }
+
+
+        #bboxControls {
+            margin: 20px auto;
+            text-align: center;
+        }
+
+        #bboxControls input[type="range"],
+        #bboxControls button {
+            margin: 5px;
+            padding: 10px;
+            background-color: #444;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        #bboxControls input[type="range"]:hover,
+        #bboxControls button:hover {
+            background-color: #666;
+        }
+
+        #bboxControls label,
+        #bboxControls span {
+            margin-left: 10px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Tracking Data Visualization</h1>
+    <canvas id="trackingCanvas" width="1024" height="576"></canvas>
+    <div id="controls">
+        <button id="prevFrame">Previous</button>
+        <input type="range" id="frameSlider" min="0" value="0">
+        <button id="nextFrame">Next</button>
+        <select id="idFilter" multiple></select>
+        <button id="selectAll">Select All</button>
+        <button id="selectNone">Select None</button>
+    </div>
+    <div id="additionalControls">
+        <h3>Track Operations</h3>
+        <button id="setTrackClass">Set Selected Tracks to Class</button>
+        <input type="number" id="newClassId" min="0" max="3" value="0" />
+        <button id="swapTrackIds">Swap Selected Tracks</button>
+    </div>
+    <div id="removeControls">
+        <button id="removeSelectedIds">Remove Selected IDs</button>
+    </div>
+    <div id="mergeControls">
+        <button id="mergeSelectedIds">Merge Selected IDs to Lowest</button>
+    </div>
+
+    <div id="playControls">
+        <button id="playButton">Play</button>
+        <button id="pauseButton" disabled>Pause</button>
+        <label for="fpsSlider">FPS:</label>
+        <input type="range" id="fpsSlider" min="1" max="60" value="30">
+        <span id="fpsValue">30</span>
+    </div>
+
+    <div id="bboxControls">
+        <h3>Bounding Box Operations</h3>
+        <button id="getCurrentBbox">Get Current Bounding Box</button>
+    
+        <label for="bboxLeft">Left:</label>
+        <input type="range" id="bboxLeft" min="0" max="1920" value="0">
+        <span id="bboxLeftValue">0</span>
+    
+        <label for="bboxTop">Top:</label>
+        <input type="range" id="bboxTop" min="0" max="1080" value="0">
+        <span id="bboxTopValue">0</span> <br>
+    
+        <label for="bboxRight">Right:</label>
+        <input type="range" id="bboxRight" min="0" max="1920" value="1920">
+        <span id="bboxRightValue">1920</span>
+    
+        <label for="bboxBottom">Bottom:</label>
+        <input type="range" id="bboxBottom" min="0" max="1080" value="1080">
+        <span id="bboxBottomValue">1080</span>  <br>
+    
+        <label for="centerX">Center X:</label>
+        <input type="range" id="centerX" min="0" max="1920" value="960">
+        <span id="centerXValue">960</span>
+    
+        <label for="centerY">Center Y:</label>
+        <input type="range" id="centerY" min="0" max="1080" value="540">
+        <span id="centerYValue">540</span>
+    
+
+        <label for="copyFromFrameInput">Copy from Frame:</label>
+        <input type="number" id="copyFromFrameInput" min="1" value="1">
+        <button id="copyFromFrame">Copy</button>
+    </div>
+    
+
+    <div id="jsonViewerContainer">
+        <h3>Frame and Selected IDs Data</h3>
+        <textarea id="jsonViewer" rows="10" cols="100" readonly></textarea>
+    </div>
+
+    <div id="fileControls">
+        <h3>File Operations</h3>
+        <label for="uploadJson">Upload JSON File:</label>
+        <input type="file" id="uploadJson" accept=".json">
+        <button id="saveJson">Save JSON File</button>
+    </div>
+    
+    <script src="main.js"></script>
+</body>
+
+</html>
