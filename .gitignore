@@ -6,3 +6,6 @@ visualizer/output_frames/*.png
 
 # Model weights
 track_saver/models/*.pt
+
+# Input videos 2
+homography-analysis-master/*.mp4
