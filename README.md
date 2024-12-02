@@ -1,4 +1,4 @@
-# Project: Object Tracking and Visualization
+# Project: FieldStats AI
 
 This repository provides tools for tracking objects in videos and visualizing the tracking results. It consists of two primary modules: `track_saver` for processing videos and saving tracking data, and `visualizer` for rendering the tracking data and manipulating frame-level details.
 
