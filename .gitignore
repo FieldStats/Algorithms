@@ -1,0 +1,8 @@
+# Input videos
+track_saver/input_videos/*.mp4
+
+# Output frames
+visualizer/output_frames/*.png
+
+# Model weights
+track_saver/models/*.pt
