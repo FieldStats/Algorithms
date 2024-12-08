@@ -7,7 +7,7 @@ from collections import defaultdict
 # File paths
 JSON_FILE = "modified_tracking_data.json"
 VIDEO_FILE = "video_left.mp4"
-HOMOGRAPHY_MATRIX_FILE = "homography_matrix.txt"
+HOMOGRAPHY_MATRIX_FILE = "al2_homography_matrix.txt"
 OUTPUT_VIDEO_FILE = "transformed_video_with_bottom_middle_interpolation.mp4"
 
 # Real-world dimensions of the transformed image
