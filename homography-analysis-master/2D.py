@@ -4,9 +4,9 @@ import json
 import os
 
 # File paths
-JSON_FILE = "rightmerged.json"
-VIDEO_FILE = "video_rightlong.mp4"
-HOMOGRAPHY_MATRIX_FILE = "al1_homography_matrix.txt"
+JSON_FILE = "merged_output_with_transformed_center.json"
+VIDEO_FILE = "video_leftlongshifted.mp4"
+HOMOGRAPHY_MATRIX_FILE = "al2_homography_matrix.txt"
 OUTPUT_VIDEO_FILE = "transformed_output_video_with_dots_and_ids.mp4"
 
 # Color mapping
@@ -14,7 +14,10 @@ COLOR_MAP = {
     "blue": (255, 0, 0),     # BGR format
     "red": (0, 0, 255),
     "purple": (128, 0, 128),
-    "orange": (0, 165, 255)
+    "orange": (0, 165, 255),
+    "yellow": (0, 255, 255),
+    "pink": (255, 20, 147),
+    "unknown": (255, 255, 255)  # White for unmapped colors
 }
 
 def draw_objects_as_dots_with_ids(frame, objects, homography_matrix):
