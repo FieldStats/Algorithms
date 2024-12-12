@@ -4,10 +4,10 @@ import json
 import os
 
 # File paths
-JSON_FILE = "borderfiltered_merged_output_with_transformed_center.json"
+JSON_FILE = "filtered_left_intersections.json"
 VIDEO_FILE = "video_leftlongshifted.mp4"
 HOMOGRAPHY_MATRIX_FILE = "al2_homography_matrix.txt"
-OUTPUT_VIDEO_FILE = "transformed_output_video_with_dots_and_ids2.mp4"
+OUTPUT_VIDEO_FILE = "transformed_output_video_with_dots_and_ids.mp4"
 
 # Color mapping
 COLOR_MAP = {

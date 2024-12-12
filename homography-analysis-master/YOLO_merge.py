@@ -3,8 +3,8 @@ import numpy as np
 import cv2
 
 # File paths
-TRACKING_DATA_RIGHT = "tracking_data_1.json"
-TRACKING_DATA_LEFT = "tracking_data_2shifted.json"
+TRACKING_DATA_RIGHT = "righttrack.json"
+TRACKING_DATA_LEFT = "lefttrack.json"
 HOMOGRAPHY_MATRIX_LEFT = "al2_homography_matrix.txt"
 HOMOGRAPHY_MATRIX_RIGHT = "al1_homography_matrix.txt"
 DIMENSIONS_FILE = "dimensions.txt"
