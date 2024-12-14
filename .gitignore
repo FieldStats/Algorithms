@@ -9,3 +9,6 @@ track_saver/models/*.pt
 
 # Input videos 2
 homography-analysis-master/*.mp4
+homography-analysis-master/*.json
+homography-analysis-master/*.png
+homography-analysis-master/*.jpg
