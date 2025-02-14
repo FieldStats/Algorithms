@@ -8,7 +8,7 @@ OUTPUT_JSON_FILE = "borderfiltered_merged_output_with_transformed_center.json"
 # Video dimensions
 VIDEO_WIDTH = 400
 VIDEO_HEIGHT = 300
-BORDER_THRESHOLD = 10
+BORDER_THRESHOLD = 15
 
 def is_near_border(center, width, height, threshold, source):
     """

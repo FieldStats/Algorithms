@@ -3,6 +3,7 @@ import numpy as np
 import os
 import cv2
 
+# TODO LEFT RIGHT COLORA GORE OLACAK
 # Input JSON files
 JSON_FILES = {
     "new_left_intersections.json": "left",
@@ -67,6 +68,8 @@ def merge_jsons(json_files, homography_matrix_left, homography_matrix_right):
 
                 # Apply filtering
                 transformed_center_x = obj["transformed_center"][0]
+
+                
                 if source == "left" and transformed_center_x > 370:
                     continue  # Skip this object
                 if source == "right" and transformed_center_x < 30:

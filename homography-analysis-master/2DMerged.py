@@ -2,14 +2,15 @@ import cv2
 import numpy as np
 import json
 import os
+from tqdm import tqdm  # Import tqdm
 
 # File paths
 JSON_LEFT_INTERSECTION = "new_left_intersections.json"
 JSON_LEFT_NON_INTERSECTION = "left_non_intersections.json"
 JSON_RIGHT_INTERSECTION = "new_right_intersections.json"
 JSON_RIGHT_NON_INTERSECTION = "right_non_intersections.json"
-VIDEO_LEFT = "video_leftlongshifted.mp4"
-VIDEO_RIGHT = "video_rightlong.mp4"
+VIDEO_LEFT = "left5shifted.mp4"
+VIDEO_RIGHT = "right5.mp4"
 HOMOGRAPHY_MATRIX_LEFT = "al2_homography_matrix.txt"
 HOMOGRAPHY_MATRIX_RIGHT = "al1_homography_matrix.txt"
 DIMENSIONS_FILE = "dimensions.txt"
@@ -34,8 +35,8 @@ def adjust_blue_lines(blue_line_left, blue_line_right, frame_width):
     - Left video: Move 5% to the right.
     - Right video: Move 2% to the left.
     """
-    new_blue_line_left = int(blue_line_left + 0.02 * frame_width)
-    new_blue_line_right = int(blue_line_right - 0.01 * frame_width)
+    new_blue_line_left = int(blue_line_left + 0.01 * frame_width)
+    new_blue_line_right = int(blue_line_right - 0.005 * frame_width)
     return new_blue_line_left, new_blue_line_right
 
 def draw_objects_as_dots_with_ids(frame, objects, homography_matrix):
@@ -88,8 +89,8 @@ def process_video(video_file, json_intersection, json_non_intersection, homograp
     fourcc = cv2.VideoWriter_fourcc(*"mp4v")
     out = cv2.VideoWriter(output_file, fourcc, fps, (frame_width, frame_height))
 
-    frame_index = 0
-    while frame_index < total_frames:
+    # Process each frame with a progress bar
+    for frame_index in tqdm(range(total_frames), desc=f"Processing {output_file}"):
         ret, frame = cap.read()
         if not ret:
             break
@@ -104,17 +105,13 @@ def process_video(video_file, json_intersection, json_non_intersection, homograp
         if frame_data_intersection:
             objects = frame_data_intersection.get("objects", [])
             transformed_frame = draw_objects_as_dots_with_ids(transformed_frame, objects, homography_matrix)
-        
+
         if frame_data_non_intersection:
             objects = frame_data_non_intersection.get("objects", [])
             transformed_frame = draw_objects_as_dots_with_ids(transformed_frame, objects, homography_matrix)
 
         # Write the transformed frame to the output video
         out.write(transformed_frame)
-
-        # Show progress
-        print(f"Processing frame {frame_index + 1}/{total_frames} for {output_file}...", end="\r")
-        frame_index += 1
 
     # Release resources
     cap.release()
@@ -139,7 +136,8 @@ def merge_videos_with_adjusted_blue_lines(output_file, left_video, right_video, 
     output_width = adjusted_blue_line_left + (frame_width - adjusted_blue_line_right)
     out = cv2.VideoWriter(output_file, fourcc, fps, (output_width, frame_height))
 
-    for _ in range(total_frames):
+    # Merge frames with a progress bar
+    for _ in tqdm(range(total_frames), desc="Merging videos"):
         ret_left, frame_left = cap_left.read()
         ret_right, frame_right = cap_right.read()
         if not ret_left or not ret_right:
@@ -183,13 +181,16 @@ def main():
     frame_height = 300  # Adjust as needed
 
     # Process left video
-    process_video(VIDEO_LEFT, JSON_LEFT_INTERSECTION, JSON_LEFT_NON_INTERSECTION, homography_matrix_left, OUTPUT_LEFT_VIDEO, frame_width, frame_height)
+    process_video(VIDEO_LEFT, JSON_LEFT_INTERSECTION, JSON_LEFT_NON_INTERSECTION,
+                  homography_matrix_left, OUTPUT_LEFT_VIDEO, frame_width, frame_height)
 
     # Process right video
-    process_video(VIDEO_RIGHT, JSON_RIGHT_INTERSECTION, JSON_RIGHT_NON_INTERSECTION, homography_matrix_right, OUTPUT_RIGHT_VIDEO, frame_width, frame_height)
+    process_video(VIDEO_RIGHT, JSON_RIGHT_INTERSECTION, JSON_RIGHT_NON_INTERSECTION,
+                  homography_matrix_right, OUTPUT_RIGHT_VIDEO, frame_width, frame_height)
 
     # Merge the processed videos
-    merge_videos_with_adjusted_blue_lines(OUTPUT_MERGED_VIDEO, OUTPUT_LEFT_VIDEO, OUTPUT_RIGHT_VIDEO, frame_width, frame_height, blue_line_left, blue_line_right)
+    merge_videos_with_adjusted_blue_lines(OUTPUT_MERGED_VIDEO, OUTPUT_LEFT_VIDEO, OUTPUT_RIGHT_VIDEO,
+                                            frame_width, frame_height, blue_line_left, blue_line_right)
 
 if __name__ == "__main__":
     main()

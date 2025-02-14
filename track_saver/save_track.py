@@ -22,7 +22,16 @@ def save_tracking_data_with_bytetrack(video_path, model_path, output_json, devic
 
     # Run prediction
     device_option = 0 if device == "gpu" else "cpu"
-    results = model.predict(video_path, verbose=True, save=False, save_txt=False, save_conf=False, device=device_option)
+    results = model.predict(
+    video_path, 
+    verbose=True, 
+    save=False, 
+    save_txt=False, 
+    save_conf=False, 
+    device=device_option, 
+    imgsz=1080  # Specify the desired resolution (e.g., 640)
+)
+
 
     # Prepare tracking data
     tracking_data = []  # List to hold frame-wise tracking information

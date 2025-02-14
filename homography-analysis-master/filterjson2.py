@@ -11,7 +11,7 @@ OUTPUT_LEFT_JSON = "filtered_left_intersections.json"
 OUTPUT_RIGHT_JSON = "filtered_right_intersections.json"
 
 OFFSET = 340  # Offset in width for right video objects
-N = 25  # Distance threshold for transformed coordinates comparison
+N = 10  # Distance threshold for transformed coordinates comparison
 
 
 def transform_point(point, homography_matrix):
@@ -37,7 +37,7 @@ def compare_and_filter_objects(left_json, right_json, homography_matrix_left, ho
 
     total_left_purple = sum(1 for frame in left_json for obj in frame["objects"] if obj.get("color") == "purple")
     total_right_orange = sum(1 for frame in right_json for obj in frame["objects"] if obj.get("color") == "orange")
-    matched_left_objects = set()
+    matched_left_indices = set()
 
     total_right_objects = 0
     matched_right_objects = 0
@@ -49,7 +49,7 @@ def compare_and_filter_objects(left_json, right_json, homography_matrix_left, ho
         total_right_objects += len(right_objects)
         new_right_objects = []
 
-        for right_obj in right_objects:
+        for right_obj_index, right_obj in enumerate(right_objects):
             # Calculate middle bottom of right bbox
             right_bbox = right_obj["bbox"]
             right_bottom = [(right_bbox[0] + right_bbox[2]) / 2, right_bbox[3]]
@@ -58,10 +58,10 @@ def compare_and_filter_objects(left_json, right_json, homography_matrix_left, ho
             right_transformed = transform_point(right_bottom, homography_matrix_right)
             right_transformed_with_offset = [right_transformed[0] + offset, right_transformed[1]]
 
-            closest_left_obj = None
+            closest_left_index = None
             min_distance = threshold
 
-            for left_obj in left_objects:
+            for left_obj_index, left_obj in enumerate(left_objects):
                 # Calculate middle bottom of left bbox
                 left_bbox = left_obj["bbox"]
                 left_bottom = [(left_bbox[0] + left_bbox[2]) / 2, left_bbox[3]]
@@ -75,25 +75,26 @@ def compare_and_filter_objects(left_json, right_json, homography_matrix_left, ho
                 )
 
                 if distance < min_distance:
-                    closest_left_obj = left_obj
+                    closest_left_index = left_obj_index
                     min_distance = distance
 
-            if closest_left_obj:
-                # Mark left object as matched
-                matched_left_objects.add(closest_left_obj["track_id"])
+            if closest_left_index is not None:
+                # Mark left object as matched by its index
+                matched_left_indices.add(closest_left_index)
 
                 # Add the right object with yellow color to the new right JSON
                 right_obj["color"] = "yellow"
                 new_right_objects.append(right_obj)
                 matched_right_objects += 1
             else:
-                # Add unmatched right object with orange color
-                right_obj["color"] = "orange"
-                new_right_objects.append(right_obj)
+                # Exclude unmatched right object if its transformed width coordinate is less than 10
+                if right_transformed_with_offset[0] >= 350:
+                    right_obj["color"] = "orange"
+                    new_right_objects.append(right_obj)
 
         # Add unmatched left objects to the new left JSON with purple color
         unmatched_left_objects = [
-            obj for obj in left_objects if obj["track_id"] not in matched_left_objects
+            obj for i, obj in enumerate(left_objects) if i not in matched_left_indices
         ]
         for obj in unmatched_left_objects:
             obj["color"] = "purple"
