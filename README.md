@@ -3,17 +3,14 @@ Project is in development stage and we plan to publish the first website version
 We will publish it free and open source to use your feedback for new features and bug fix. 
 If you want to use it later please star it and wait from us. 
 If you have questions related to design you can contact to Tuna Cuma (https://www.linkedin.com/in/tuna-cuma) (please do not try to run, you wont be able to for now). 
+Frontend and backend repository of the project can be found here: https://github.com/TunaCuma/fieldstats   
 
-
-# Here are some footage from our project presentation 
+# Here are some footage from our project presentation related to algorithms
 Player stuff:
 ![image](https://github.com/user-attachments/assets/cc62adb8-9144-47fd-aa8e-68808e64fc1a)
 ![image](https://github.com/user-attachments/assets/6d63bf6a-c09e-416f-99e3-7cc6de63ee1c)
 Ball stuff(not planned in first version but we work on): 
 ![image](https://github.com/user-attachments/assets/c69d0325-94e8-4049-b59d-2e727f1b6540)
-    
-
-
 
 Rest of the read me will be updated soon.
 
