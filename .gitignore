@@ -1,14 +1,4 @@
 # Input videos
-track_saver/input_videos/*.mp4
-
-# Output frames
-visualizer/output_frames/*.png
-
-# Model weights
-track_saver/models/*.pt
-
-# Input videos 2
-homography-analysis-master/*.mp4
-homography-analysis-master/*.json
-homography-analysis-master/*.png
-homography-analysis-master/*.jpg
+*.mp4
+*.pt
+*.json
