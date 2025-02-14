@@ -1,3 +1,19 @@
+# Read here if you want to use the software!
+Project is in development stage and we plan to publish the first website version at June 2025. Although we (developers) can get get the very satisfactory results using the tools in this repo, they are not user friendly and not parrallelized (not optimized). We change algorithms and it has to be in this way for the theoretical stage. In the first version we will guarantee at least %10 upper error bound for all distance related analysis (thats what we get at current stage). If you want to use it later please star it and wait from us. If you have questions related to design you can contact through rifataltasrmrdnsrgntlzr996@gmail.com or Tuna Cuma (please do not try to run, you wont be able to). 
+
+Here are some footage from our senior project presentation 
+Player stuff:
+![image](https://github.com/user-attachments/assets/cc62adb8-9144-47fd-aa8e-68808e64fc1a)
+![image](https://github.com/user-attachments/assets/6d63bf6a-c09e-416f-99e3-7cc6de63ee1c)
+Ball stuff(not planned in first version but we work on): 
+![image](https://github.com/user-attachments/assets/c69d0325-94e8-4049-b59d-2e727f1b6540)
+    
+
+
+
+Rest of the read me will be updated soon.
+
+
 # Project: FieldStats AI
 
 This repository provides tools for tracking objects in videos and visualizing the tracking results. It consists of two primary modules: `track_saver` for processing videos and saving tracking data, and `visualizer` for rendering the tracking data and manipulating frame-level details.
