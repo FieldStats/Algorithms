@@ -1,5 +1,5 @@
 # Read here if you are interested
-Project is in development stage and we plan to publish the first website version at June 2025. Although we (developers) can get get the very satisfactory results using the tools in this repo, they are not user friendly and not parallelized (not optimized). We change algorithms and it has to be in this way for the theoretical stage. In the first version we will guarantee at least %10 upper error bound for all distance related analysis (thats what we get at current stage). 
+Project is in development stage and we plan to publish the first website version at June 2025. Although we (developers) can get get the very satisfactory results using the tools in this repo, they are not user friendly and not parallelized (not optimized). We change algorithms and it has to be in this way for the theoretical stage. In the first version we will guarantee at least %10 upper error bound for all distance related analysis, for FULL length game footage (thats what we are at the currently). 
 We plan to publish a open source version to use your feedback for new features and bug fix. 
 If you want to use it later please star it and wait from us. 
 If you have questions related to design you can contact through rifataltasrmrdnsrgntlzr996@gmail.com or Tuna Cuma (please do not try to run, you wont be able to). 
