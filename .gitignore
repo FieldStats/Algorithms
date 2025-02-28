@@ -9,3 +9,6 @@
 
 # Ignore PNG files in all folders
 **/*.png
+
+# Ignore .env files in all folders
+**/.env
