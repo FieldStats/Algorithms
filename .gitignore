@@ -15,3 +15,6 @@
 
 # Ignore __pycache__ folders in all folders
 **/__pycache__
+
+# Ignore .jpg files in all folders
+**/*.jpg
