@@ -12,3 +12,6 @@
 
 # Ignore .env files in all folders
 **/.env
+
+# Ignore __pycache__ folders in all folders
+**/__pycache__
