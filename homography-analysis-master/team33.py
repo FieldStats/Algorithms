@@ -154,7 +154,7 @@ def process_video_with_json(video_path, json_path, output_json, team_assigner, s
 
 if __name__ == "__main__":
     video_json_pairs = [
-        ("video_rightlong.mp4", "right_non_intersections.json"),
+        ("left5shifted.mp4", "left_non_intersections.json"),
     ]
 
     team_colors_file = "team_colors.json"

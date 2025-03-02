@@ -36,13 +36,13 @@ def process_data(input_file, output_file, t=2, fps=60, frame_offset=0):
                 start_frame = last_seen - (path_len - 1)
                 end_frame = last_seen
                 
-                if start_frame < S < end_frame:
+                if start_frame < S <= end_frame:
                     split_pos = S - start_frame
                     # Split the path into two parts
                     part1 = {
                         'id': path['id'],
                         'path': path['path'][:split_pos],
-                        'last_seen_frame': start_frame + split_pos -1 ,
+                        'last_seen_frame': start_frame + split_pos - 1,
                         'team_index': team
                     }
                     part2 = {
@@ -73,10 +73,10 @@ def process_data(input_file, output_file, t=2, fps=60, frame_offset=0):
         json.dump(data, f, indent=4)
 
 # Example usage
-input_file = 'debug_modified.json'
+input_file = 'debug3.json'
 output_file = 'output.json'
 t = 5
 fps = 60
-frame_offset = 300  # Adjust as needed
+frame_offset = 0  # Adjust as needed
 
 process_data(input_file, output_file, t, fps, frame_offset)

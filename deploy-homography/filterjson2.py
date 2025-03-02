@@ -141,11 +141,14 @@ def main():
     with open(OUTPUT_RIGHT_JSON, "w") as f:
         json.dump(filtered_right, f, indent=2)
 
-    print("Modified JSONs have been saved.")
+    import adjust2Dmerged
 
-import adjust2Dmerged
+
+    print("Modified JSONs have been saved.")
+    print("second script completed. Now running the third script...")
+    adjust2Dmerged.main()  # Call the second script after finishing the first
+
 
 if __name__ == "__main__":
     main()
-    print("second script completed. Now running the third script...")
-    adjust2Dmerged.main()  # Call the second script after finishing the first
+    

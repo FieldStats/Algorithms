@@ -135,6 +135,9 @@ def main():
 
     # Create updated JSONs
     create_new_jsons(blue_line_left, blue_line_right, homography_matrix_left, homography_matrix_right)
+    import bos
+    print("third script completed. Now running the fourth script...")
+    bos.main()  # Call the second script after finishing the first
 
 
 import bos
@@ -142,7 +145,6 @@ import bos
 
 if __name__ == "__main__":
     main()
-    print("third script completed. Now running the fourth script...")
-    bos.main()  # Call the second script after finishing the first
+    
 
     

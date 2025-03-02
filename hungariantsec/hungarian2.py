@@ -34,7 +34,7 @@ def get_player_positions_next(data, split_frame):
             # If the split frame falls within this path, choose that position.
             if start_frame <= split_frame <= end_frame:
                 frame_offset = split_frame - start_frame
-                chosen_position = path['path'][frame_offset]
+                chosen_position = path['path'][frame_offset][1:]
                 break  # Use the first matching path.
             
             # Otherwise, if the split frame is before the path starts, consider it as a candidate.
@@ -46,7 +46,7 @@ def get_player_positions_next(data, split_frame):
 
         # If no path contained the split frame, use the next path's first position (if available).
         if chosen_position is None and candidate_path is not None:
-            chosen_position = candidate_path['path'][0]
+            chosen_position = candidate_path['path'][0][1:]
             
         if chosen_position:
             positions[int(obj_id)] = chosen_position
@@ -54,39 +54,20 @@ def get_player_positions_next(data, split_frame):
     return positions
 
 
-def get_player_positions(data, split_frame):
+    return {"left": leftmost_id, "right": rightmost_id}
+def get_next_extreme_positions(data, split_frame):
     """
-    Returns a dictionary mapping each player id (int) to its position (x, y) at the split frame.
-    (Skips object id 23, e.g. referee.)
+    Uses get_player_positions_next to determine which object is the leftmost (smallest x)
+    and which is the rightmost (largest x) at the split frame, based on the next available positions.
+    
+    Parameters:
+        data (dict): The data containing player objects and their paths.
+        split_frame (int): The frame at which to retrieve the next positions.
+        
+    Returns:
+        dict: A dictionary with keys "left" and "right" mapping to the respective object ids.
     """
-    positions = {}
-    for obj_id, obj in data.items():
-       
-        latest_position = None
-        for path in obj['paths']:
-            start_frame = path['last_seen_frame'] - (len(path['path']) - 1)
-            end_frame = path['last_seen_frame']
-            
-            if start_frame <= split_frame <= end_frame:
-                frame_offset = split_frame - start_frame
-                latest_position = path['path'][frame_offset]
-                break
-                
-            if path['last_seen_frame'] < split_frame:
-                latest_position = path['path'][-1]
-                
-        if latest_position:
-            positions[int(obj_id)] = latest_position
-    return positions
-
-
-def get_extreme_positions(data, split_frame):
-    """
-    Uses get_player_positions to determine which object is the leftmost (smallest x)
-    and which is the rightmost (largest x) at the split frame.
-    Returns a dict with keys "left" and "right" mapping to object ids.
-    """
-    positions = get_player_positions(data, split_frame)
+    positions = get_player_positions_next(data, split_frame)
     
     leftmost_id = None
     rightmost_id = None
@@ -104,38 +85,47 @@ def get_extreme_positions(data, split_frame):
 
     return {"left": leftmost_id, "right": rightmost_id}
 
-
 def get_player_team(data, split_frame):
     """
     Returns a dictionary mapping each player id (int) to its team (from the selected path)
-    at the split frame.
+    at the split frame, using the next available path's team if the split frame is not within any path.
     
-    The same logic is used as in get_player_positions:
-      - If the split_frame falls within a path's frame range, then that path's team is used.
-      - Otherwise, if the path ended before split_frame, the team from the last position is used.
-      
-    Object id 23 is skipped.
+    Parameters:
+        data (dict): The data containing player objects and their paths.
+        split_frame (int): The frame at which to determine the team.
+        
+    Returns:
+        dict: A dictionary mapping player ids (int) to their team index.
     """
     teams = {}
     for obj_id, obj in data.items():
-      #  if int(obj_id) == 23:
-        #    continue
-
+       
         team_val = None
+        candidate_path = None
+        candidate_start = None
+        
         for path in obj['paths']:
             start_frame = path['last_seen_frame'] - (len(path['path']) - 1)
             end_frame = path['last_seen_frame']
             
+            # Check if split frame is within this path's interval
             if start_frame <= split_frame <= end_frame:
-                team_val = path.get('team_index', None)
-                break
+                team_val = path.get('team_index')
+                break  # Use the first matching path
             
-            if path['last_seen_frame'] < split_frame:
-                team_val = path.get('team_index', None)
-                
+            # Track the earliest next path (start_frame > split_frame)
+            if start_frame > split_frame:
+                if candidate_start is None or start_frame < candidate_start:
+                    candidate_start = start_frame
+                    candidate_path = path
+        
+        # If no overlapping path, use the candidate next path
+        if team_val is None and candidate_path is not None:
+            team_val = candidate_path.get('team_index')
+        
         if team_val is not None:
             teams[int(obj_id)] = team_val
-    print(teams)
+    
     return teams
 
 
@@ -155,7 +145,7 @@ def classify_non_extreme_players(data, split_frame):
     Returns a dict with keys -1, 0, and 1 mapping to lists of object ids.
     """
     # Get the extreme players (these will be excluded)
-    extremes = get_extreme_positions(data, split_frame)
+    extremes = get_next_extreme_positions(data, split_frame)
     left_extreme = extremes.get("left")
     right_extreme = extremes.get("right")
     
@@ -260,66 +250,164 @@ def compute_distance_matrix(player_positions):
     
     return distance_matrix
 
+import numpy as np
+from sklearn.cluster import KMeans
+from scipy.optimize import linear_sum_assignment
+
 def final_index_matching(teams, player_positions,
-                         prev_left_extreme, next_left_extreme,
-                         prev_right_extreme, next_right_extreme,
-                         fixed_self):
+                          next_left_extreme,
+                          next_right_extreme,
+                         fixed_self = 23):
     """
-    Combines two Hungarian matchings with fixed assignments to produce a final matching of 23 pairs.
+    Computes formation assignments (formation IDs) separately for the two teams.
     
-    Input assumptions:
-      - For the first Hungarian matching, we use:
-          • teams[1] : list of 10 player IDs from snapshot1 (team1)
-          • teams[-1]: list of 10 player IDs from snapshot1 (team–1)
-      - For the second Hungarian matching, we use:
-          • teams[2] : list of 10 player IDs from snapshot2 (team1)
-          • teams[-2]: list of 10 player IDs from snapshot2 (team–1)
-          
-      - The fixed assignments are provided as follows (and are disjoint from the Hungarian matching IDs):
-          • Left extreme: (prev_left_extreme, next_left_extreme)
-          • Right extreme: (prev_right_extreme, next_right_extreme)
-          • Self-match: (fixed_self, fixed_self)
+    For team right (teams[1]) and team left (teams[-1]):
+      - Extract each player's x coordinate.
+      - Run k-means clustering with k=4.
+      - Order the clusters from left to right based on cluster centers.
+      - Build a cost matrix (squared difference between a player's x coordinate
+        and the cluster center) and expand it so that each cluster gets the specified number of players.
+      - Solve the assignment with the Hungarian algorithm.
+      - Within each cluster, sort players by x coordinate and then assign formation IDs sequentially.
     
-    The final matching will be a list of 23 pairs (tuples) of the form:
-         (team1_snapshot_ID, team_minus1_snapshot_ID)
-    and will be printed out.
+    Capacities:
+      - For team right: capacities_right = [1, 2, 3, 4] (i.e. first cluster gets 1 slot, second gets 2, etc.)
+      - For team left:  capacities_left  = [4, 3, 2, 1]
+      
+    Returns:
+      A tuple (formation_ids_right, formation_ids_left) where each is a dictionary mapping
+      player ID to its formation ID (ordered left-to-right).
     """
+    import numpy as np
+    from sklearn.cluster import KMeans
+    from scipy.optimize import linear_sum_assignment
+
+    # --- Get team positions ---
+    # team_right: teams[1], team_left: teams[-1]
+    team_right_pos = {player_id: player_positions[player_id]
+                      for player_id in teams[1] if player_id in player_positions}
+    team_left_pos = {player_id: player_positions[player_id]
+                     for player_id in teams[-1] if player_id in player_positions}
+
+    # Extract player IDs and their x coordinates (reshaped into a column vector).
+    team_right_ids = list(team_right_pos.keys())
+    team_left_ids = list(team_left_pos.keys())
+    player_x_right = np.array([team_right_pos[pid][0] for pid in team_right_ids]).reshape(-1, 1)
+    player_x_left = np.array([team_left_pos[pid][0] for pid in team_left_ids]).reshape(-1, 1)
+
+    # --- k-means clustering on x coordinate ---
+    # Run k-means with 4 clusters for each team.
+    kmeans_right = KMeans(n_clusters=4, random_state=0).fit(player_x_right)
+    kmeans_left = KMeans(n_clusters=4, random_state=0).fit(player_x_left)
     
-    # --- Hungarian Matching 1 (from snapshot1) ---
-    # Compute cost matrix for snapshot1 using the team IDs provided.
-    # Note: The order of arguments in get_formationCostDifference is assumed such that:
-    #       cost1 is used to match team1 (rows, from teams[1]) with team–1 (cols, from teams[-1]).
-    team1_positions = {player_id: player_positions[player_id] for player_id in teams[1] if player_id in player_positions}
-    team_minus1_positions = {player_id: player_positions[player_id] for player_id in teams[-1] if player_id in player_positions}
+    # Retrieve cluster centers.
+    cluster_centers_right = kmeans_right.cluster_centers_.flatten()
+    cluster_centers_left  = kmeans_left.cluster_centers_.flatten()
 
-    cost1, cost2 = formations.get_formationCostDifference(
-                    compute_id_cost_matrix(team_minus1_positions),
-                    compute_id_cost_matrix(team1_positions))
-    row_ind1, col_ind1 = linear_sum_assignment(cost1)
-    row_ind2, col_ind2 = linear_sum_assignment(cost2)
-    # Retrieve the actual player IDs for snapshot1 from the Hungarian matching.
-    hungarian1_team_minus1 = [teams[-1][r] for r in row_ind1]      
-    hungarian1_team_minus1_matched = [teams[-1][r] for r in col_ind1]    
-    hungarian2_team_1 = [teams[1][r] for r in row_ind2]      
-    hungarian2_team_1_matched = [teams[1][r] for r in col_ind2]    
-
-    final_match_left = hungarian1_team_minus1 + hungarian2_team_1 + [prev_left_extreme, prev_right_extreme, fixed_self]
-    final_match_right = hungarian1_team_minus1_matched + hungarian2_team_1_matched + [next_left_extreme, next_right_extreme, fixed_self]
-
-    if len(final_match_left) != 23 or len(final_match_right) != 23:
-        raise ValueError("Final matching does not have 23 pairs!")
-
-    # Print the final matching pairs:
-    print("Final Matching (Total 23 pairs):")
-    for i in range(23):
-        print(f"Pair {i+1}: Team1 ID {final_match_left[i]}  <-->  Team–1 ID {final_match_right[i]}")
+    # Order clusters by center (left-to-right) for each team.
+    order_right = np.argsort(cluster_centers_right)
+    sorted_centers_right = cluster_centers_right[order_right]
     
-    return final_match_left, final_match_right
+    order_left = np.argsort(cluster_centers_left)
+    sorted_centers_left = cluster_centers_left[order_left]
+
+    # Define capacities: different for each team.
+    capacities_right = [1, 2, 3, 4]  # Right team: 1 slot in leftmost cluster, then 2, etc.
+    capacities_left  = [4, 3, 2, 1]  # Left team: 4 slots in leftmost cluster, then 3, etc.
+
+    def assign_formation_ids(player_ids, player_x, sorted_centers, capacities):
+        """
+        Given a list of player_ids and their x coordinates (as a 2D array),
+        assign formation IDs using:
+          - a cost matrix based on squared differences to sorted_centers,
+          - expanding columns according to capacities,
+          - Hungarian algorithm assignment,
+          - and then sorting within each cluster by the x coordinate.
+        
+        Returns:
+          formation_ids: a dict mapping player_id to its formation slot (an integer).
+        """
+        n_players = len(player_x)
+        # Build cost matrix: cost[i, j] = squared difference between player's x and j-th ordered cluster center.
+        cost_matrix = np.zeros((n_players, 4))
+        for i in range(n_players):
+            for j in range(4):
+                cost_matrix[i, j] = (player_x[i][0] - sorted_centers[j]) ** 2
+
+        # Expand cost matrix: duplicate each column j according to its capacity.
+        expanded_cost = np.hstack([np.tile(cost_matrix[:, j:j+1], (1, cap))
+                                   for j, cap in enumerate(capacities)])
+        
+        # Solve the assignment with the Hungarian algorithm.
+        row_ind, col_ind = linear_sum_assignment(expanded_cost)
+        
+        # boundaries: cumulative indices where each cluster's columns end.
+        boundaries = np.cumsum([0] + capacities)  # e.g., for capacities [1,2,3,4] -> [0, 1, 3, 6, 10]
+        
+        # Group assignments by cluster.
+        assignments_by_cluster = {i: [] for i in range(4)}
+        for r, c in zip(row_ind, col_ind):
+            for cluster in range(4):
+                if boundaries[cluster] <= c < boundaries[cluster + 1]:
+                    assignments_by_cluster[cluster].append((player_ids[r], player_positions[player_ids[r]][1]))
+
+                    break
+        
+        # Within each cluster, sort players by their x coordinate (increasing).
+        for cluster in assignments_by_cluster:
+            assignments_by_cluster[cluster] = sorted(assignments_by_cluster[cluster], key=lambda tup: tup[1])
+        
+        # Assign formation IDs in order: first cluster gets the first set of IDs, etc.
+        formation_ids = {}
+        current_id = 1
+        for cluster in range(4):
+            if capacities == [1, 2, 3, 4]:  # Right team (IDs increase with decreasing x)
+                sorted_players = sorted(assignments_by_cluster[cluster], key=lambda tup: -tup[1])  # Sort by decreasing x
+            else:  # Left team (default: IDs increase with increasing x)
+                sorted_players = sorted(assignments_by_cluster[cluster], key=lambda tup: tup[1])   # Sort by increasing x
+
+            for pid, _ in sorted_players:
+                formation_ids[pid] = current_id
+                current_id += 1
+        return formation_ids
+
+    # --- Compute formation assignments for both teams ---
+    formation_ids_right = assign_formation_ids(team_right_ids, player_x_right, sorted_centers_right, capacities_right)
+    formation_ids_left  = assign_formation_ids(team_left_ids,  player_x_left,  sorted_centers_left,  capacities_left)
+    
+
+    x = 1  # Example
+    y = 12  # Example
+
+    # Add x and y to the values of both maps
+    updated_right = {k: v + x for k, v in formation_ids_right.items()}
+    updated_left  = {k: v + y for k, v in formation_ids_left.items()}
+
+    merged_keys = list(updated_right.keys()) + list(updated_left.keys())
+    merged_values = list(updated_right.values()) + list(updated_left.values())
+
+    print("Merged Keys:", merged_keys)
+    print("Merged Values:", merged_values)
+
+    final_match_before_all = merged_keys + [next_left_extreme, next_right_extreme, fixed_self]
+    final_match_after_all = merged_values + [1, 12, 23]
+
+
+    
+    # Print out the assignments.
+    print("Team Right Formation IDs (from left to right):")
+    for pid in sorted(formation_ids_right, key=lambda x: formation_ids_right[x]):
+        print(f"Player {pid}: Formation ID {formation_ids_right[pid]}")
+    
+    print("\nTeam Left Formation IDs (from left to right):")
+    for pid in sorted(formation_ids_left, key=lambda x: formation_ids_left[x]):
+        print(f"Player {pid}: Formation ID {formation_ids_left[pid]}")
+
+    return final_match_before_all, final_match_after_all
 
 
 
-def process_matching(input_file, output_file, t=2, fps=60,
-                    team_weight=0.0, formation_weight=0.0, id_weight=1.0):
+def process_matching(input_file, output_file, t=2, fps=60):
     with open(input_file, 'r') as f:
         data = json.load(f)
     
@@ -328,6 +416,8 @@ def process_matching(input_file, output_file, t=2, fps=60,
     
     max_frame = max(p['last_seen_frame'] for obj in data.values() for p in obj['paths'])
     split_frames = [i * split_interval for i in range(1, (max_frame // split_interval) + 1)]
+
+    all_mappings = []
 
     for split_frame in split_frames:
         print(f"\nProcessing split frame {split_frame}")
@@ -364,29 +454,23 @@ def process_matching(input_file, output_file, t=2, fps=60,
             continue
         if n != 23:
             continue
+        if split_frame > 9000:
+            continue
 
         #cost_matrix += compute_id_cost_matrix(valid_ids, id_weight)
-        player_positions = get_player_positions(data, split_frame)
         player_positions_next = get_player_positions_next(data, split_frame)
         #print(len(player_positions))
         #print(len(player_positions_next))
 
-        prev_extremes = get_extreme_positions(data, split_frame)
-        prev_left_extreme = prev_extremes.get("left")
-        prev_right_extreme = prev_extremes.get("right")
-        next_extremes = get_extreme_positions(data, split_frame)
+        next_extremes = get_next_extreme_positions(data, split_frame)
         next_left_extreme = next_extremes.get("left")
         next_right_extreme = next_extremes.get("right")
 
         teams = classify_non_extreme_players(data, split_frame)
-        fixed_self = 16
+        fixed_self = teams[0][0]
 
-        final_left, final_right = final_index_matching(
-        teams, player_positions,
-        prev_left_extreme, next_left_extreme,
-        prev_right_extreme, next_right_extreme,
-        fixed_self
-        )
+
+        final_left, final_right = final_index_matching( teams, player_positions_next, next_left_extreme, next_right_extreme,  fixed_self )
 
         print("Team -1:", teams[-1])
         print("Team  0:", teams[0])
@@ -409,14 +493,12 @@ def process_matching(input_file, output_file, t=2, fps=60,
             "frame": split_frame,
             "mapping": id_mapping
         }
+        all_mappings.append(mapping_data)
 
     # 4. Save to JSON (no changes made to original data)
     with open(output_file, 'w') as f:
-        json.dump(mapping_data, f, indent=4)
+        json.dump(all_mappings, f, indent=4)
     print(f"\nMapping saved to {output_file}")
 
 # Example usage with custom weights
-process_matching('output.json', 'output2.json', t=5, fps=60,
-                 team_weight=0.5,   # Currently not used (multiplies 0)
-                 formation_weight=0.2,  # Currently not used
-                 id_weight=0.8)
+process_matching('output.json', 'output2.json', t=5, fps=60)

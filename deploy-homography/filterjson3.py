@@ -66,11 +66,15 @@ def filter_json_by_border(input_file, output_file, width, height, threshold):
 
     print(f"Filtered JSON saved to '{output_file}'.")
 
+    
 
-import ioudelete
-
-if __name__ == "__main__":
+def main():
     filter_json_by_border(INPUT_JSON_FILE, OUTPUT_JSON_FILE, VIDEO_WIDTH, VIDEO_HEIGHT, BORDER_THRESHOLD)
+    import ioudelete
     print("sixth script completed. Now running the seventh script...")
     ioudelete.main()  # Call the second script after finishing the first
+    
+if __name__ == "__main__":
+    filter_json_by_border(INPUT_JSON_FILE, OUTPUT_JSON_FILE, VIDEO_WIDTH, VIDEO_HEIGHT, BORDER_THRESHOLD)
+    
 

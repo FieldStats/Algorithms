@@ -110,10 +110,11 @@ def main():
     save_json(merged_data, OUTPUT_JSON)
 
 
-import filterjson3
+    import filterjson3
+    print("fifth script completed. Now running the sixth script...")
+    filterjson3.main()  # Call the second script after finishing the first
 
 
 if __name__ == "__main__":
     main()
-    print("fifth script completed. Now running the sixth script...")
-    filterjson3.main()  # Call the second script after finishing the first
+    

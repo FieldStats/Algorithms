@@ -61,6 +61,14 @@ def remove_low_conf_objects(json_file, output_file, iou_threshold=0.95):
     print(f"Total objects before: {total_objects_before}")
     print(f"Total objects after: {total_objects_after}")
 
+def main():
+    input_file = "borderfiltered_merged_output_with_transformed_center.json"  # Replace with the path to your JSON file
+    output_file = "95_final.json"  # Replace with the desired output file name
+
+    remove_low_conf_objects(input_file, output_file)
+
+    print("seventh script completed.all complete")
+
 if __name__ == "__main__":
     input_file = "borderfiltered_merged_output_with_transformed_center.json"  # Replace with the path to your JSON file
     output_file = "98.json"  # Replace with the desired output file name
