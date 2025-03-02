@@ -1,5 +1,20 @@
-# Input videos
-*.mp4
-*.pt
-*.json
-*.png
+# Ignore video files in all folders
+**/*.mp4
+
+# Ignore PyTorch model files in all folders
+**/*.pt
+
+# Ignore JSON files in all folders
+**/*.json
+
+# Ignore PNG files in all folders
+**/*.png
+
+# Ignore .env files in all folders
+**/.env
+
+# Ignore __pycache__ folders in all folders
+**/__pycache__
+
+# Ignore .jpg files in all folders
+**/*.jpg
