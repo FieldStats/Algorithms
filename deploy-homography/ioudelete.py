@@ -67,10 +67,13 @@ def main():
 
     remove_low_conf_objects(input_file, output_file)
 
-    print("seventh script completed.all complete")
+    import jsoncompress
+    print("seventh script completed. Now running the eighth script...")
+    jsoncompress.main()  # Call the second script after finishing the first
 
 if __name__ == "__main__":
     input_file = "borderfiltered_merged_output_with_transformed_center.json"  # Replace with the path to your JSON file
     output_file = "98.json"  # Replace with the desired output file name
 
     remove_low_conf_objects(input_file, output_file)
+

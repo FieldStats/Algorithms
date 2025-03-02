@@ -312,8 +312,8 @@ def final_index_matching(teams, player_positions,
     sorted_centers_left = cluster_centers_left[order_left]
 
     # Define capacities: different for each team.
-    capacities_right = [1, 2, 3, 4]  # Right team: 1 slot in leftmost cluster, then 2, etc.
-    capacities_left  = [4, 3, 2, 1]  # Left team: 4 slots in leftmost cluster, then 3, etc.
+    capacities_right = [1, 3, 2, 4]  # Right team: 1 slot in leftmost cluster, then 2, etc.
+    capacities_left  = [4, 1, 2, 3]  # Left team: 4 slots in leftmost cluster, then 3, etc.
 
     def assign_formation_ids(player_ids, player_x, sorted_centers, capacities):
         """
@@ -361,10 +361,7 @@ def final_index_matching(teams, player_positions,
         formation_ids = {}
         current_id = 1
         for cluster in range(4):
-            if capacities == [1, 2, 3, 4]:  # Right team (IDs increase with decreasing x)
-                sorted_players = sorted(assignments_by_cluster[cluster], key=lambda tup: -tup[1])  # Sort by decreasing x
-            else:  # Left team (default: IDs increase with increasing x)
-                sorted_players = sorted(assignments_by_cluster[cluster], key=lambda tup: tup[1])   # Sort by increasing x
+            sorted_players = sorted(assignments_by_cluster[cluster], key=lambda tup: tup[1])   # Sort by increasing x
 
             for pid, _ in sorted_players:
                 formation_ids[pid] = current_id
@@ -377,7 +374,7 @@ def final_index_matching(teams, player_positions,
     
 
     x = 1  # Example
-    y = 12  # Example
+    y = 11  # Example
 
     # Add x and y to the values of both maps
     updated_right = {k: v + x for k, v in formation_ids_right.items()}
@@ -390,7 +387,7 @@ def final_index_matching(teams, player_positions,
     print("Merged Values:", merged_values)
 
     final_match_before_all = merged_keys + [next_left_extreme, next_right_extreme, fixed_self]
-    final_match_after_all = merged_values + [1, 12, 23]
+    final_match_after_all = merged_values + [1, 22, 23]
 
 
     

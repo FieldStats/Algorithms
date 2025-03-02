@@ -12,8 +12,6 @@ OUTPUT_RIGHT_JSON = "right_intersections.json"
 OUTPUT_RIGHT_NON_INTERSECTIONS_JSON = "right_non_intersections.json"
 OUTPUT_LEFT_JSON = "left_intersections.json"
 OUTPUT_LEFT_NON_INTERSECTIONS_JSON = "left_non_intersections.json"
-DEBUG_IMAGE_RIGHT = "al1_debug.png"
-DEBUG_IMAGE_LEFT = "al2_debug.png"
 
 # Color mapping
 COLORS = {
@@ -136,3 +134,23 @@ if __name__ == "__main__":
     main()
     print("First script completed. Now running the second script...")
     filterjson2.main()  # Call the second script after finishing the first
+
+def run_homography_and_merge(
+    tracking_data_right, tracking_data_left, homography_matrix_left, homography_matrix_right,
+    dimensions_file, output_right_json, output_right_non_json, output_left_json, output_left_non_json
+):
+    global TRACKING_DATA_RIGHT, TRACKING_DATA_LEFT, HOMOGRAPHY_MATRIX_LEFT, HOMOGRAPHY_MATRIX_RIGHT
+    global DIMENSIONS_FILE, OUTPUT_RIGHT_JSON, OUTPUT_RIGHT_NON_INTERSECTIONS_JSON
+    global OUTPUT_LEFT_JSON, OUTPUT_LEFT_NON_INTERSECTIONS_JSON, DEBUG_IMAGE_RIGHT, DEBUG_IMAGE_LEFT
+
+    TRACKING_DATA_RIGHT = tracking_data_right
+    TRACKING_DATA_LEFT = tracking_data_left
+    HOMOGRAPHY_MATRIX_LEFT = homography_matrix_left
+    HOMOGRAPHY_MATRIX_RIGHT = homography_matrix_right
+    DIMENSIONS_FILE = dimensions_file
+    OUTPUT_RIGHT_JSON = output_right_json
+    OUTPUT_RIGHT_NON_INTERSECTIONS_JSON = output_right_non_json
+    OUTPUT_LEFT_JSON = output_left_json
+    OUTPUT_LEFT_NON_INTERSECTIONS_JSON = output_left_non_json
+
+    main()
