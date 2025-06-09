@@ -1,9 +1,3 @@
-# Read here if you are interested
-Project is in development stage and we plan to publish the first website version at June 2025. Although we (developers) can get get the very satisfactory results using the tools in this repo, they are not user friendly and not parallelized (not optimized). We change algorithms and it has to be in this way for the theoretical stage. In the first version we will guarantee at least %10 upper error bound for all distance related analysis, for FULL length game footage (thats what we are at the currently). 
-We will publish it free and open source to use your feedback for new features and bug fix. 
-If you want to use it later please watch and star it and wait from us. 
-If you have questions related to design you can contact to Tuna Cuma (https://www.linkedin.com/in/tuna-cuma) (please do not try to run, you wont be able to for now). 
-Frontend and backend repository of the project can be found here: https://github.com/TunaCuma/fieldstats   
 
 # Here are some footage from our project presentation related to algorithms
 Player stuff:
@@ -11,6 +5,9 @@ Player stuff:
 ![image](https://github.com/user-attachments/assets/6d63bf6a-c09e-416f-99e3-7cc6de63ee1c)
 Ball stuff(not planned in first version but we work on): 
 ![image](https://github.com/user-attachments/assets/c69d0325-94e8-4049-b59d-2e727f1b6540)
+![WhatsApp Image 2025-05-09 at 09 52 52_2eca1b9f](https://github.com/user-attachments/assets/cac8e00b-dc12-45a2-a812-b94761e7ee3d)
+![WhatsApp Image 2025-05-09 at 10 53 47_4ee0c8d3](https://github.com/user-attachments/assets/960c9b98-738e-4864-b242-0932ae461149)
+
 
 Rest of the read me will be updated soon.
 
